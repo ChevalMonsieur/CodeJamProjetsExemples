@@ -44,7 +44,7 @@ class Birdie {
     position = createVector(0, 0) // position du joueur
     velociteY = 0 // vitesse verticale du joueur
     scoreActuel = 0 // score actuel du joueur
-    lastClosestPipe = null // le pipe le plus proche du joueur a la frame précédente (celui dont il faut vérifier si le joueur l'a passé)
+    lastClosestPipe = null // l'ancien pipe le plus proche du joueur
     closestPipe = null // le pipe le plus proche du joueur (celui dont il faut vérifier si le joueur l'a passé)
 
     static size = 100 // taille du joueur
@@ -135,11 +135,11 @@ class Birdie {
         // si le joueur n'a pas de pipe le plus proche, on lui en donne un
         if (this.closestPipe == null && Pipe.pipes != null) this.closestPipe = Pipe.pipes[0]
         
-        // si le joueur n'a toujours pas de pipe le plus proche, on ne fait rien, sinon on vérifie si il a passé le pipe le plus proche
+        // si le joueur n'a toujours pas de pipe le plus proche, on ne fait rien, sinon on vérifie si il a passé le pipe le plus proche et que ce n'est pas le même que la fois d'avant
         if (this.closestPipe == null) return
         else if (this.position.x > this.closestPipe.position.x + Pipe.largeur/2 && this.lastClosestPipe != this.closestPipe) {
             this.scoreActuel++ // augmente le score du joueur
-            this.lastClosestPipe = this.closestPipe // change le pipe le plus proche du joueur a la frame précédente
+            this.lastClosestPipe = this.closestPipe // change le dernier pipe le plus proche du joueur
             this.closestPipe = Pipe.pipes[Pipe.pipes.indexOf(this.closestPipe) + 1] // change le pipe le plus proche du joueur
         }
     }
