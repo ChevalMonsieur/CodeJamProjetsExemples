@@ -44,6 +44,7 @@ class Birdie {
     position = createVector(0, 0) // position du joueur
     velociteY = 0 // vitesse verticale du joueur
     scoreActuel = 0 // score actuel du joueur
+    lastClosestPipe = null // le pipe le plus proche du joueur a la frame précédente (celui dont il faut vérifier si le joueur l'a passé)
     closestPipe = null // le pipe le plus proche du joueur (celui dont il faut vérifier si le joueur l'a passé)
 
     static size = 100 // taille du joueur
@@ -136,8 +137,9 @@ class Birdie {
         
         // si le joueur n'a toujours pas de pipe le plus proche, on ne fait rien, sinon on vérifie si il a passé le pipe le plus proche
         if (this.closestPipe == null) return
-        else if (this.position.x > this.closestPipe.position.x + Pipe.largeur/2) {
+        else if (this.position.x > this.closestPipe.position.x + Pipe.largeur/2 && this.lastClosestPipe != this.closestPipe) {
             this.scoreActuel++ // augmente le score du joueur
+            this.lastClosestPipe = this.closestPipe // change le pipe le plus proche du joueur a la frame précédente
             this.closestPipe = Pipe.pipes[Pipe.pipes.indexOf(this.closestPipe) + 1] // change le pipe le plus proche du joueur
         }
     }
@@ -195,7 +197,7 @@ class Pipe {
 
     // détruit le pipe si il est hors de l'écran et le retire du tableau
     destructionPipeSiBesoin() {
-        if (this.position.x < -Pipe.largeur/2) Pipe.pipes.shift()  // retire le premier élément du...
+        if (this.position.x < -Pipe.largeur) Pipe.pipes.shift()  // retire le premier élément du...
         // tableau (le pipe le plus a gauche) s'il est hors de l'écran (quand sa position est inferieur a -Pipe.largeur/2)
     }
 
