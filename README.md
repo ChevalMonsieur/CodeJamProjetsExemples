@@ -1,4 +1,4 @@
-# Exemples CodeJam
+# CodeJamProjetsExemples
 
 Dans ce repository Github, vous retrouverez le code source des différents projets documentés servant de support/modèle pour les S1/débutants dans un langage pour les différentes CodeJam.
 
