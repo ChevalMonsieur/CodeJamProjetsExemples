@@ -24,7 +24,6 @@ function draw() {
         joueur.deplacement()
         joueur.collisions()
         joueur.verifSiPassagePipe()
-        joueur.afficherScore()
 
         // fait agir les pipes
         for (p of Pipe.pipes) {
@@ -33,6 +32,7 @@ function draw() {
             p.destructionPipeSiBesoin()
         }
         Pipe.creationPipeSiBesoin()
+        joueur.afficherScore() // on affiche le score en dernier comme ça il est au dessus de tout sur l'image
 
     } else { // si le jeu est terminé, affiche le texte de fin de partie et vérifie si le joueur veut rejouer
         afficherGameOver()
@@ -50,6 +50,7 @@ class Birdie {
     static record = 0 // record du joueur
     static gravite = 0.2 // gravité du joueur
     static puissanceSaut = 5 // puissance du saut du joueur
+    static gentillesseHitBox = 3 // gentillesse de la hitbox du joueur (la hitbox est moins grande que le dessin de tant de pixel)
 
     // constructeur de birdie
     constructor() {
@@ -102,9 +103,30 @@ class Birdie {
         }
     }
 
-    // vérifie si le joueur est en collision avec un pipe et a perdu
+    // vérifie si le joueur est en collision avec un pipe et a perdu (LE PLUS COMPLIQUE A FAIRE)
     #collisionPipe() {
+        let collision = false // détermine si il y a eu collision ou non
 
+        // si le joueur n'a pas de pipe le plus proche, on lui en donne un
+        if (this.closestPipe == null && Pipe.pipes != null) this.closestPipe = Pipe.pipes[0]
+        
+        // si le joueur n'a toujours pas de pipe le plus proche, on ne fait rien, sinon on vérifie si il a passé le pipe le plus proche
+        if (this.closestPipe == null) return
+
+        // verifie pour chaque coin du pipe si il est en collision avec le joueur
+        else if (dist(this.position.x, this.position.y, this.closestPipe.position.x, this.closestPipe.pipeHeight) < Birdie.size/2 - Birdie.gentillesseHitBox) collision = true
+        else if (dist(this.position.x, this.position.y, this.closestPipe.position.x, this.closestPipe.pipeHeight + this.closestPipe.spacement) < Birdie.size/2 - Birdie.gentillesseHitBox) collision = true
+        else if (dist(this.position.x, this.position.y, this.closestPipe.position.x + Pipe.largeur, this.closestPipe.pipeHeight) < Birdie.size/2 - Birdie.gentillesseHitBox) collision = true
+        else if (dist(this.position.x, this.position.y, this.closestPipe.position.x + Pipe.largeur, this.closestPipe.pipeHeight + this.closestPipe.spacement) < Birdie.size/2 - Birdie.gentillesseHitBox) collision = true
+
+        // verifie pour les côtés du pipe s'ils sont en collision avec le joueur
+        else if (Math.abs(this.position.x - this.closestPipe.position.x) < Birdie.size/2 && (this.position.y < this.closestPipe.pipeHeight + Birdie.size/2 - Birdie.gentillesseHitBox || this.position.y > this.closestPipe.pipeHeight + this.closestPipe.spacement + Birdie.size/2 - Birdie.gentillesseHitBox )) collision = true
+
+        // si il y a eu collision, on arrête le jeu
+        if (collision) {
+            enJeu = false
+            this.updateRecord()
+        }
     }
 
     // vérifie si le joueur a passé un pipe et augmente son score si c'est le cas
@@ -114,7 +136,7 @@ class Birdie {
         
         // si le joueur n'a toujours pas de pipe le plus proche, on ne fait rien, sinon on vérifie si il a passé le pipe le plus proche
         if (this.closestPipe == null) return
-        else if (this.position.x > this.closestPipe.position.x + Pipe.largeur) {
+        else if (this.position.x > this.closestPipe.position.x + Pipe.largeur/2) {
             this.scoreActuel++ // augmente le score du joueur
             this.closestPipe = Pipe.pipes[Pipe.pipes.indexOf(this.closestPipe) + 1] // change le pipe le plus proche du joueur
         }
@@ -186,7 +208,7 @@ class Pipe {
 // affiche le texte de fin de partie
 function afficherGameOver() {
     // setup affichage texte
-    background(120,150,220)
+    // background(120,150,220)
     noStroke()
     fill(255)
 
