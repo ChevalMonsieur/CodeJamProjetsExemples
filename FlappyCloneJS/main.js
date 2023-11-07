@@ -49,7 +49,7 @@ class Birdie {
 
     static size = 100 // taille du joueur
     static record = 0 // record du joueur
-    static gravite = 0.2 // gravité du joueur
+    static gravite = 0.4 // gravité du joueur
     static puissanceSaut = 5 // puissance du saut du joueur
     static gentillesseHitBox = 3 // gentillesse de la hitbox du joueur (la hitbox est moins grande que le dessin de tant de pixel)
 
@@ -168,7 +168,7 @@ class Pipe {
 
     // variables statiques
     static pipes = [] // tableau qui contient tous les pipes
-    static vitesse = 5 // vitesse de déplacement des pipes
+    static vitesse = 10 // vitesse de déplacement des pipes
     static largeur = 100 // largeur du pipe
     static cooldownCreation = 100 // combien de frames entre chaque création de pipe
 
