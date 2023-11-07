@@ -146,9 +146,15 @@ class ActionListener:
 
     # checks if the player clicked on the screen to restart the game
     def checkForRestart(self):
-        if pygame.mouse.get_pressed()[0]:
+        if pygame.mouse.get_pressed()[0] and not self.wasPressingLastFrame:
             GAME_MANAGER.board = Board()
             GAME_MANAGER.inGame = True
+            GAME_MANAGER.ruleMaster.turn = 1
+
+        if pygame.mouse.get_pressed()[0]:
+            self.wasPressingLastFrame = True
+        else:
+            self.wasPressingLastFrame = False
 
 class Board:
     def __init__(self):
