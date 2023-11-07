@@ -18,25 +18,26 @@ class GameManager:
         self.display = Display()
         self.ruleMaster = RuleMaster()
         self.actionListener = ActionListener()
+        self.inGame = True
 
 class RuleMaster:
     def __init__(self):
         self.turn = 1
 
-    def checkIfMoveIsValid(self, x, y):
+    def checkIfMoveIsValid(self, x, y, ActIfValid = True):
         if GAME_MANAGER.board.boardGrid[x][y] != 0:
             print("Invalid move: space already occupied")
             return False
 
-        return self.ActIfMoveTurnsPieces(x, y)
+        return self.CheckIfMoveTurnsPieces(x, y, ActIfValid)
 
     # returns True if the move turned something, returns False otherwise
-    def ActIfMoveTurnsPieces(self, x, y):
+    def CheckIfMoveTurnsPieces(self, x, y, ActIfValid):
         somethingTurned = False
         # get all direction from the piece and and call ActIfDirectionTurnPieces on them
         for xOffset in range (-1,2):
             for yOffset in range (-1,2):
-                if self.ActIfDirectionTurnPieces(x, y, xOffset, yOffset):
+                if self.CheckIfDirectionTurnPieces(x, y, xOffset, yOffset, ActIfValid):
                     somethingTurned = True
        
         if (not somethingTurned):
@@ -45,7 +46,7 @@ class RuleMaster:
         return somethingTurned
 
     # returns True if the move turned something on a specific direction and apply the movement, returns False otherwise
-    def ActIfDirectionTurnPieces(self, x, y, xOffset, yOffset):
+    def CheckIfDirectionTurnPieces(self, x, y, xOffset, yOffset, ActIfValid):
         length = 2
 
         # get playerColor
@@ -64,7 +65,8 @@ class RuleMaster:
                 # "HARD" PART HERE, this part checks for 
                 while self.isPieceInBound(x+length*xOffset, y+length*yOffset) and GAME_MANAGER.board.boardGrid[x+length*xOffset][y+length*yOffset] != 0:
                     if GAME_MANAGER.board.boardGrid[x+length*xOffset][y+length*yOffset] == playerColor:
-                        self.TurnPieces(x, y, xOffset, yOffset, length)
+                        if ActIfValid:
+                            self.TurnPieces(x, y, xOffset, yOffset, length)
                         return True
                     length += 1 
         return False
@@ -77,6 +79,25 @@ class RuleMaster:
         if x < 0 or x > 7 or y < 0 or y > 7:
             return False
         return True
+    
+    def TestGameOver(self):
+        if GAME_MANAGER.board.isBoardFull(): GAME_MANAGER.inGame = False
+        if not self.TestPlayerCanPlay(False, False) and not self.TestPlayerCanPlay(False, True): GAME_MANAGER.inGame = False
+        return None
+
+    def TestPlayerCanPlay(self, updateTurn = True, addTurn = False):
+        if (addTurn):
+            self.turn += 1
+        for i in range(8):
+            for j in range(8):
+                if (GAME_MANAGER.ruleMaster.checkIfMoveIsValid(i, j, False)):
+                    return True
+                
+        if addTurn:
+            self.turn -= 1
+        if updateTurn:
+            self.turn += 1
+        return False
 
 class ActionListener:
     def __init__(self):
@@ -98,7 +119,11 @@ class ActionListener:
                     GAME_MANAGER.board.boardGrid[gridPosition[0]][gridPosition[1]] = 1
                 else:
                     GAME_MANAGER.board.boardGrid[gridPosition[0]][gridPosition[1]] = -1
+
                 GAME_MANAGER.ruleMaster.turn += 1
+                GAME_MANAGER.ruleMaster.TestGameOver()
+                GAME_MANAGER.ruleMaster.TestPlayerCanPlay()
+
         
         if pygame.mouse.get_pressed()[0]:
             self.wasPressingLastFrame = True
@@ -129,6 +154,19 @@ class Board:
                     score[1] += 1
 
         return score
+    
+    def getPlayerColor(self):
+        if GAME_MANAGER.ruleMaster.turn%2 == 1:
+            return 'White'
+        else:
+            return 'Black'
+        
+    def isBoardFull(self):
+        for i in range(8):
+            for j in range(8):
+                if self.boardGrid[i][j] == 0:
+                    return False
+        return True
 
 class Display:
     def __init__(self):
@@ -141,6 +179,7 @@ class Display:
 
         self.lineWidth = 1
 
+        self.font = pygame.font.Font('freesansbold.ttf', 15)
         self.display = pygame.display.set_mode((600, 600+self.borderSize))
 
     def drawBoard(self):
@@ -164,12 +203,20 @@ class Display:
                     pygame.draw.circle(self.display, self.blackPieceColor, (i*75+37, j*75+37), 33)
             
     def drawStats(self):
-        # whiteScore, blackScore = GAME_MANAGER.board.getScore()
-        # text = "white: " + str(whiteScore) + " black: " + str(blackScore)
-        # textRect = text.get_rect()
-        # textRect.center = (300, 650)
-        # displaysurface.blit(text, textRect)
-        pass
+        # draw player score
+        scoreWhite, scoreBlack = GAME_MANAGER.board.getScore()
+        content = "White score: " + str(scoreWhite) + "     Black score: " + str(scoreBlack)
+        text = self.font.render(content, False, (255,255,255))
+        textRect = text.get_rect()
+        textRect.center = (120, 615)
+        self.display.blit(text, textRect)
+
+        # draw current player turn
+        content = "Current Player: " + GAME_MANAGER.board.getPlayerColor()
+        text = self.font.render(content, False, (255,255,255))
+        textRect = text.get_rect()
+        textRect.center = (510, 615)
+        self.display.blit(text, textRect)
 
         
 
@@ -183,7 +230,6 @@ pygame.init()
 FramePerSec = pygame.time.Clock()
 pygame.display.set_caption("Game")
 
-displaysurface = pygame.display.set_mode((600, 630))
 GAME_MANAGER = GameManager()
 
 
@@ -199,7 +245,15 @@ while pygame.event.wait().type != pygame.QUIT:
     GAME_MANAGER.display.drawStats()
 
     # check for mouse action
-    GAME_MANAGER.actionListener.checkForMouseAction()
+    if GAME_MANAGER.inGame:
+        GAME_MANAGER.actionListener.checkForMouseAction()
+    else:
+        content = "Game Over"
+        text = GAME_MANAGER.display.font.render(content, False, (255,255,255))
+        textRect = text.get_rect()
+        textRect.center = (300, 300)
+        GAME_MANAGER.display.display.blit(text, textRect)
+        print("Game Over")
 
     # update the screen
     pygame.display.update()
